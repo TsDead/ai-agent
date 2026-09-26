@@ -1,152 +1,287 @@
 <!DOCTYPE html>
-<html lang="ru" data-theme="light">
+<html lang="ru">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AI Agent · NOVACODE</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
-    --sky-500:#0EA5E9; --sky-600:#0284C7; --sky-700:#0369A1;
-    --bg:#F0F9FF; --bg-grad-a:#DBF1FE; --bg-grad-b:#F5FBFF;
-    --card:#FFFFFF; --text:#0F172A; --title:#0B3A54; --muted:#475569; --faint:#94A3B8;
-    --border:#E0F0F8; --border-2:#D6ECF7; --muted-bg:#EFF7FB;
-    --shadow:0 1px 2px rgba(2,132,199,.06), 0 10px 30px rgba(2,132,199,.08);
-    --ok:#0F766E; --bad:#DC2626; --wiki:#7C3AED; --calc:#0284C7; --time:#0F766E;
+    /* macOS light */
+    --bg:#F5F5F7; --panel:#FFFFFF; --panel-2:#FBFBFD; --line:#E3E3E8; --line-2:#D2D2D7;
+    --ink:#1D1D1F; --ink-soft:#6E6E73; --faint:#86868B;
+    --acc:#0071E3; --acc-hi:#0077ED; --acc-deep:#0058B0; --on-acc:#fff;
+    --wiki:#AF52DE; --calc:#34C759; --time:#007AFF; --final:#30D158; --bad:#FF3B30;
+    --grad-a:#0071E3; --grad-b:#5AC8FA; --grad-c:#34C759;
+    --font:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Inter","Helvetica Neue",Arial,sans-serif;
+    --spring:cubic-bezier(.34,1.56,.64,1);
+    --ease:cubic-bezier(.22,1,.36,1);
+    --pad:clamp(20px,5vw,48px); --max:980px;
+    --shadow-win:0 24px 60px -18px rgba(0,0,0,.16), 0 6px 16px rgba(0,0,0,.05);
+    --shadow-sm:0 2px 8px rgba(0,0,0,.04), 0 1px 2px rgba(0,0,0,.04);
   }
-  [data-theme="dark"]{
-    --bg:#0A1120; --bg-grad-a:#0E2036; --bg-grad-b:#0A1120;
-    --card:#111a2b; --text:#E7EEF7; --title:#DCEBFA; --muted:#9FB2C8; --faint:#5f728a;
-    --border:#1e2c40; --border-2:#243449; --muted-bg:#1a2740;
-    --shadow:0 1px 2px rgba(0,0,0,.3), 0 12px 34px rgba(0,0,0,.35);
-    --ok:#5eead4; --wiki:#c4b5fd; --calc:#7dd3fc; --time:#5eead4;
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#000000; --panel:#1C1C1E; --panel-2:#262629; --line:#38383C; --line-2:#48484C;
+      --ink:#F5F5F7; --ink-soft:#AEAEB2; --faint:#8E8E93;
+      --acc:#0A84FF; --acc-hi:#409CFF; --acc-deep:#0060DF; --on-acc:#fff;
+      --wiki:#BF5AF2; --calc:#30D158; --time:#0A84FF; --final:#30D158; --bad:#FF453A;
+      --grad-a:#0A84FF; --grad-b:#64D2FF; --grad-c:#30D158;
+      --shadow-win:0 30px 70px -20px rgba(0,0,0,.7), 0 6px 16px rgba(0,0,0,.4);
+      --shadow-sm:0 2px 10px rgba(0,0,0,.4);
+    }
   }
-  *{box-sizing:border-box}
-  body{margin:0;color:var(--text);font-family:'DM Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
-       font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased;min-height:100vh;
-       background:radial-gradient(1100px 520px at 50% -180px, var(--bg-grad-a) 0%, rgba(0,0,0,0) 70%),
-                  linear-gradient(180deg,var(--bg-grad-b) 0%, var(--bg) 100%);transition:background .25s,color .25s}
-  .wrap{max-width:820px;margin:0 auto;padding:26px 24px 70px}
-  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:32px}
-  .brand{font-family:'Space Grotesk',sans-serif;font-weight:700;letter-spacing:.02em;color:var(--title);font-size:16px;display:flex;align-items:center;gap:8px}
-  .brand .dot{width:9px;height:9px;border-radius:50%;background:var(--sky-500);box-shadow:0 0 0 4px rgba(14,165,233,.18)}
-  .tools{display:flex;gap:8px}
-  .icon-btn{display:inline-flex;align-items:center;justify-content:center;min-height:36px;padding:0 12px;background:var(--card);
-       border:1px solid var(--border-2);border-radius:10px;color:var(--muted);cursor:pointer;font:inherit;font-size:13px;font-weight:600;transition:.15s}
-  .icon-btn:hover{border-color:var(--sky-500);color:var(--sky-600)} .icon-btn svg{width:16px;height:16px}
-  .eyebrow{font-family:'Space Grotesk',sans-serif;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--sky-600);font-weight:600}
-  h1{font-family:'Space Grotesk',sans-serif;font-size:31px;font-weight:700;letter-spacing:-.02em;margin:10px 0 10px;color:var(--title)}
-  .lede{color:var(--muted);margin:0 0 24px;max-width:62ch}
-  .about{background:var(--card);border:1px solid var(--border-2);border-radius:14px;padding:16px 18px;margin-bottom:22px;box-shadow:var(--shadow)}
-  .about h2{font-family:'Space Grotesk',sans-serif;font-size:15px;margin:0 0 8px;color:var(--title)}
-  .about ul{margin:0;padding-left:18px;color:var(--muted);font-size:14px} .about li{margin-bottom:4px}
-  .toolchips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:26px}
-  .chip{display:inline-flex;align-items:center;gap:7px;background:var(--card);border:1px solid var(--border-2);border-radius:999px;
-       padding:7px 13px 7px 11px;font-size:13px;color:var(--muted);box-shadow:var(--shadow)}
-  .chip b{font-family:'Space Grotesk',sans-serif;color:var(--title);font-weight:600}
-  .chip .d{width:8px;height:8px;border-radius:50%}
-  .label{font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin:0 0 8px;font-weight:600}
-  textarea,input{width:100%;background:var(--card);border:1px solid var(--border-2);border-radius:12px;color:var(--text);
-       padding:12px 14px;font:inherit;font-size:14.5px;resize:vertical;transition:border-color .18s,box-shadow .18s}
-  textarea{min-height:80px;line-height:1.5}
+  *,*::before,*::after{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  @media (prefers-reduced-motion: no-preference){html{scroll-behavior:smooth}}
+  body{margin:0;background:var(--bg);color:var(--ink);font:400 17px/1.55 var(--font);
+    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;overflow-x:hidden;min-height:100vh}
+  h1,h2,h3{margin:0;font-weight:600;line-height:1.06;letter-spacing:-.022em;text-wrap:balance}
+  p{margin:0}
+  a{color:inherit}
+  ::selection{background:var(--acc);color:#fff}
+  :focus-visible{outline:2px solid var(--acc);outline-offset:3px;border-radius:8px}
+
+  /* floating background blobs */
+  .bg{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+  .bg b{position:absolute;border-radius:50%;filter:blur(70px);opacity:.5}
+  .bg b:nth-child(1){width:520px;height:520px;left:-140px;top:-120px;background:radial-gradient(circle,rgba(0,113,227,.28),transparent 70%);animation:drift1 22s ease-in-out infinite}
+  .bg b:nth-child(2){width:460px;height:460px;right:-120px;top:180px;background:radial-gradient(circle,rgba(52,199,89,.20),transparent 70%);animation:drift2 26s ease-in-out infinite}
+  .bg b:nth-child(3){width:400px;height:400px;left:30%;bottom:-160px;background:radial-gradient(circle,rgba(175,82,222,.16),transparent 70%);animation:drift3 30s ease-in-out infinite}
+  @keyframes drift1{50%{transform:translate(60px,50px) scale(1.1)}}
+  @keyframes drift2{50%{transform:translate(-50px,40px) scale(1.08)}}
+  @keyframes drift3{50%{transform:translate(40px,-40px) scale(1.12)}}
+  .wrap{position:relative;z-index:1;max-width:var(--max);margin:0 auto;padding:0 var(--pad) 80px}
+
+  /* topbar */
+  .topbar{display:flex;align-items:center;justify-content:space-between;height:64px;position:sticky;top:0;z-index:40;
+    margin:0 calc(-1*var(--pad));padding:0 var(--pad);
+    background:color-mix(in srgb,var(--bg) 72%,transparent);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px)}
+  .brand{font-weight:600;font-size:16px;letter-spacing:-.01em;display:flex;align-items:center;gap:9px}
+  .brand .dot{width:9px;height:9px;border-radius:50%;background:var(--acc);animation:breathe 3s var(--ease) infinite}
+  @keyframes breathe{50%{transform:scale(1.35);opacity:.65}}
+  /* segmented control */
+  .seg{position:relative;display:flex;background:color-mix(in srgb,var(--ink) 8%,transparent);border-radius:9px;padding:3px}
+  .seg button{position:relative;z-index:1;font:600 13px/1 var(--font);color:var(--ink-soft);background:none;border:0;padding:7px 13px;border-radius:7px;cursor:pointer;transition:color .25s}
+  .seg button[aria-pressed="true"]{color:var(--ink)}
+  .seg .thumb{position:absolute;z-index:0;top:3px;bottom:3px;width:calc(50% - 3px);border-radius:7px;background:var(--panel);
+    box-shadow:var(--shadow-sm);transition:transform .38s var(--spring)}
+  .seg[data-on="en"] .thumb{transform:translateX(100%)}
+
+  /* entrance */
+  [data-enter]{opacity:0;transform:translateY(18px)}
+  body.ready [data-enter]{opacity:1;transform:none;transition:opacity .7s var(--ease),transform .7s var(--ease)}
+  body.ready [data-enter="1"]{transition-delay:.05s} body.ready [data-enter="2"]{transition-delay:.13s}
+  body.ready [data-enter="3"]{transition-delay:.21s} body.ready [data-enter="4"]{transition-delay:.29s}
+
+  /* hero */
+  .hero{padding:clamp(44px,8vw,92px) 0 clamp(28px,5vw,52px)}
+  .eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;letter-spacing:.01em;color:var(--acc);
+    background:color-mix(in srgb,var(--acc) 10%,transparent);padding:6px 12px;border-radius:999px}
+  .eyebrow .p{width:7px;height:7px;border-radius:50%;background:var(--acc)}
+  h1.title{font-size:clamp(32px,5vw,56px);line-height:1.05;letter-spacing:-.03em;font-weight:700;margin:20px 0 0;max-width:20ch;overflow-wrap:break-word}
+  .title .grad{background:linear-gradient(115deg,var(--grad-a),var(--grad-b) 55%,var(--grad-c));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .lede{margin:20px 0 0;max-width:46ch;font-size:clamp(17px,1.8vw,20px);line-height:1.5;color:var(--ink-soft);font-weight:400}
+
+  /* dock (tool chips) */
+  .dock{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px;max-width:none}
+  .chip{display:inline-flex;align-items:center;gap:9px;background:var(--panel);border:1px solid var(--line);border-radius:14px;
+    padding:11px 16px;font-size:14px;color:var(--ink-soft);box-shadow:var(--shadow-sm);cursor:default;transform-origin:bottom center;
+    transition:transform .18s var(--ease),box-shadow .18s;will-change:transform}
+  .chip .d{width:10px;height:10px;border-radius:50%}
+  .chip b{font-weight:600;font-size:14px;color:var(--ink)}
+
+  /* macOS window */
+  .win{margin-top:clamp(30px,5vw,48px);background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:var(--shadow-win)}
+  .win__bar{display:flex;align-items:center;gap:8px;padding:13px 16px;border-bottom:1px solid var(--line);
+    background:linear-gradient(color-mix(in srgb,var(--panel) 60%,var(--bg)),var(--panel))}
+  .tl{display:flex;gap:8px}
+  .tl i{width:12px;height:12px;border-radius:50%;transition:filter .15s}
+  .tl i:nth-child(1){background:#FF5F57} .tl i:nth-child(2){background:#FEBC2E} .tl i:nth-child(3){background:#28C840}
+  .win__bar:hover .tl i{filter:brightness(1.05)}
+  .win__ttl{margin:0 auto;transform:translateX(-24px);font-size:13px;font-weight:500;color:var(--faint)}
+  .win__body{padding:22px}
+
+  .label{font-size:12px;font-weight:600;letter-spacing:.02em;color:var(--faint);margin:0 0 9px;display:block;text-transform:uppercase}
+  textarea,input{width:100%;background:var(--panel-2);border:1px solid var(--line-2);border-radius:12px;color:var(--ink);
+    padding:14px 15px;font:400 16px/1.5 var(--font);resize:vertical;transition:border-color .2s,box-shadow .2s,background-color .2s}
+  textarea{min-height:76px}
   textarea::placeholder{color:var(--faint)}
-  textarea:focus,input:focus{outline:none;border-color:var(--sky-500);box-shadow:0 0 0 4px rgba(14,165,233,.14)}
-  .row{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;align-items:center}
-  button{font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;border-radius:11px;padding:11px 20px;cursor:pointer;border:1px solid transparent;transition:.15s}
-  .primary{background:var(--sky-700);color:#fff;border-color:var(--sky-700);box-shadow:0 6px 16px rgba(3,105,161,.22)}
-  .primary:hover{background:var(--sky-600)} .primary:active{transform:translateY(1px)}
-  button:disabled{opacity:.5;cursor:default;box-shadow:none}
-  .examples{display:flex;flex-direction:column;gap:8px;margin-top:12px}
-  .ex{text-align:left;background:var(--card);border:1px solid var(--border-2);border-radius:11px;padding:11px 14px;
-       color:var(--muted);cursor:pointer;font:inherit;font-size:13.5px;transition:.15s;width:100%}
-  .ex:hover{border-color:var(--sky-500);color:var(--sky-600)}
-  .status{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:8px}
-  .spin{width:14px;height:14px;border:2px solid var(--border-2);border-top-color:var(--sky-600);border-radius:50%;animation:sp .7s linear infinite}
-  @keyframes sp{to{transform:rotate(360deg)}}
-  section.block{margin-top:30px;padding-top:26px;border-top:1px solid var(--border)}
-  .head h2{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:600;margin:0 0 3px;color:var(--title)}
-  .head p{margin:0 0 14px;font-size:13px;color:var(--muted)}
-  /* steps timeline */
-  .steps{position:relative;margin-left:6px;padding-left:26px}
-  .steps::before{content:"";position:absolute;left:6px;top:6px;bottom:14px;width:2px;background:var(--border-2)}
-  .step{position:relative;margin-bottom:16px;opacity:0;transform:translateY(6px);animation:rise .3s ease forwards}
-  @keyframes rise{to{opacity:1;transform:none}}
-  .step .node{position:absolute;left:-26px;top:2px;width:14px;height:14px;border-radius:50%;background:var(--card);border:2px solid var(--sky-500)}
-  .step.final .node{background:var(--ok);border-color:var(--ok)}
-  .step .act{display:inline-flex;align-items:center;gap:7px;font-family:'Space Grotesk',monospace;font-size:12.5px;font-weight:600}
+  textarea:focus,input:focus{outline:none;border-color:var(--acc);background:var(--panel);box-shadow:0 0 0 4px color-mix(in srgb,var(--acc) 18%,transparent)}
+  .row{display:flex;gap:12px;margin-top:14px;flex-wrap:wrap;align-items:center}
+  .btn{display:inline-flex;align-items:center;gap:9px;font:600 15px/1 var(--font);letter-spacing:-.01em;
+    background:var(--acc);color:var(--on-acc);border:0;border-radius:980px;padding:13px 24px;cursor:pointer;
+    box-shadow:0 6px 18px -6px color-mix(in srgb,var(--acc) 70%,transparent);
+    transition:transform .16s var(--spring),background-color .16s,box-shadow .16s}
+  .btn:hover{background:var(--acc-hi);transform:scale(1.035);box-shadow:0 10px 24px -6px color-mix(in srgb,var(--acc) 75%,transparent)}
+  .btn:active{transform:scale(.97)}
+  .btn:disabled{opacity:.5;cursor:default;box-shadow:none;transform:none}
+  .btn svg{width:15px;height:15px}
+  .btn--ghost{background:var(--panel);color:var(--acc);border:1px solid var(--line-2);box-shadow:var(--shadow-sm)}
+  .btn--ghost:hover{background:var(--panel-2);transform:scale(1.035);box-shadow:var(--shadow-sm)}
+  .status{font-size:14px;color:var(--ink-soft);display:inline-flex;align-items:center;gap:9px}
+  .think{display:inline-flex;gap:4px;align-items:center}
+  .think i{width:6px;height:6px;border-radius:50%;background:var(--acc);animation:bob 1s var(--ease) infinite}
+  .think i:nth-child(2){animation-delay:.15s} .think i:nth-child(3){animation-delay:.3s}
+  @keyframes bob{0%,100%{opacity:.3;transform:translateY(0)}50%{opacity:1;transform:translateY(-4px)}}
+
+  .examples{margin-top:16px;display:flex;flex-direction:column;gap:9px}
+  .ex{position:relative;text-align:left;background:var(--panel-2);border:1px solid var(--line);border-radius:12px;
+    padding:12px 15px 12px 40px;color:var(--ink-soft);cursor:pointer;font:400 14.5px/1.45 var(--font);
+    transition:border-color .18s,color .18s,transform .18s var(--ease),background-color .18s;width:100%}
+  .ex::before{content:"›";position:absolute;left:16px;top:50%;transform:translateY(-50%);color:var(--acc);font-weight:700;transition:transform .2s var(--ease)}
+  .ex:hover{border-color:var(--acc);color:var(--ink);transform:translateX(3px)}
+  .ex:hover::before{transform:translateY(-50%) translateX(3px)}
+
+  /* reveal */
+  [data-reveal]{opacity:0;transform:translateY(28px);transition:opacity .7s var(--ease),transform .7s var(--ease)}
+  [data-reveal].shown{opacity:1;transform:none}
+
+  section.blk{margin-top:clamp(52px,8vw,92px)}
+  .blk__head{margin-bottom:22px}
+  .blk__eyebrow{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+  .blk__head h2{font-size:clamp(26px,3.6vw,40px);margin-top:9px;font-weight:700;letter-spacing:-.025em}
+  .blk__head p{margin-top:9px;color:var(--ink-soft);max-width:56ch;font-size:16px}
+
+  .about{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:var(--shadow-sm);
+    transition:transform .3s var(--ease),box-shadow .3s}
+  .card:hover{transform:translateY(-6px);box-shadow:var(--shadow-win)}
+  .card h3{font-size:16px;font-weight:600;margin-bottom:9px;display:flex;align-items:center;gap:9px}
+  .card h3 .n{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:8px;font-size:12px;color:#fff;background:var(--acc)}
+  .card p{font-size:14.5px;color:var(--ink-soft);line-height:1.5}
+
+  /* result / timeline */
+  #result{display:none}
+  .timeline{position:relative;margin-left:7px;padding-left:30px}
+  .timeline__line{position:absolute;left:7px;top:8px;bottom:10px;width:2px;
+    background:linear-gradient(var(--acc),var(--calc));transform:scaleY(0);transform-origin:top;transition:transform var(--drawdur,1.2s) linear}
+  .timeline.draw .timeline__line{transform:scaleY(1)}
+  .step{position:relative;margin-bottom:18px;opacity:0;transform:translateY(12px);transition:opacity .45s var(--ease),transform .45s var(--ease)}
+  .step.in{opacity:1;transform:none}
+  .step .node{position:absolute;left:-30px;top:2px;width:16px;height:16px;border-radius:50%;background:var(--panel);
+    border:2px solid var(--acc);box-shadow:0 0 0 3px var(--bg)}
+  .step.in .node{animation:pop .4s var(--spring)}
+  .step.final .node{background:var(--final);border-color:var(--final)}
+  @keyframes pop{0%{transform:scale(.4)}60%{transform:scale(1.2)}100%{transform:scale(1)}}
+  .step .act{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;letter-spacing:.01em}
   .step .act .d{width:8px;height:8px;border-radius:50%}
-  .step .th{color:var(--muted);font-size:13.5px;margin:5px 0 7px;font-style:italic}
-  .card{background:var(--card);border:1px solid var(--border-2);border-radius:12px;padding:12px 14px;box-shadow:var(--shadow)}
-  .card .in{font-family:'Space Grotesk',monospace;font-size:12.5px;color:var(--sky-700);margin-bottom:7px;word-break:break-word}
-  .card .obs{font-size:13.5px;color:var(--muted);white-space:pre-wrap;line-height:1.5}
-  .card .obs .cap{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);display:block;margin-bottom:4px}
-  .answer{background:var(--card);border:1px solid var(--border-2);border-left:3px solid var(--ok);border-radius:12px;padding:16px 18px;margin-top:6px;box-shadow:var(--shadow)}
-  .answer .txt{white-space:pre-wrap;font-size:15px;line-height:1.65}
-  .foot-note{margin-top:12px;font-size:12px;color:var(--faint);display:flex;gap:14px;flex-wrap:wrap}
-  .metricsgrid{display:flex;gap:12px;flex-wrap:wrap;margin:4px 0 16px}
-  .metric{flex:1;min-width:130px;background:var(--card);border:1px solid var(--border-2);border-radius:12px;padding:15px 17px;box-shadow:var(--shadow)}
-  .metric .v{font-family:'Space Grotesk',sans-serif;font-size:25px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--title)}
-  .metric .l{font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-top:3px}
-  .qrow{display:flex;gap:10px;align-items:baseline;padding:9px 0;border-top:1px solid var(--border);font-size:13.5px}
-  .qrow .st{font-family:'Space Grotesk',monospace;font-size:11.5px;color:var(--faint)}
-  .warn{color:var(--bad)}
-  .err{color:var(--bad);margin-top:14px;font-size:14px}
-  footer{margin-top:46px;padding-top:22px;border-top:1px solid var(--border);color:var(--faint);font-size:12.5px;display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
-  footer a{color:var(--muted);text-decoration:none} footer a:hover{color:var(--sky-600)}
-  @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+  .step .act .num{color:var(--faint);font-weight:500}
+  .step .th{color:var(--ink-soft);font-size:14.5px;margin:8px 0 9px;line-height:1.5}
+  .step .io{background:var(--panel);border:1px solid var(--line);border-radius:13px;overflow:hidden;box-shadow:var(--shadow-sm)}
+  .step .io .in{padding:11px 14px;font:600 13px/1.5 var(--font);color:var(--acc);border-bottom:1px solid var(--line);word-break:break-word;background:var(--panel-2)}
+  .step .io .in::before{content:"› ";color:var(--faint)}
+  .step .io .obs{padding:12px 14px;font-size:13.5px;color:var(--ink-soft);white-space:pre-wrap;line-height:1.55}
+  .step .io .obs .cap{display:block;font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);margin-bottom:6px}
+
+  .answer{margin-top:10px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px 22px;box-shadow:var(--shadow-sm);
+    border-left:3px solid var(--final)}
+  .answer .cap{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--final);margin-bottom:10px;display:block}
+  .answer .txt{white-space:pre-wrap;font-size:16px;line-height:1.65}
+  .answer .txt w{opacity:0;transition:opacity .3s ease-out}
+  .answer .txt w.on{opacity:1}
+  .metaline{margin-top:14px;display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--faint)}
+  .metaline .warn{color:var(--bad)} .metaline b{color:var(--acc);font-weight:600}
+
+  .metrics{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+  .metric{flex:1;min-width:135px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px 20px;box-shadow:var(--shadow-sm);
+    transition:transform .3s var(--ease),box-shadow .3s}
+  .metric:hover{transform:translateY(-5px);box-shadow:var(--shadow-win)}
+  .metric .v{font-size:32px;font-weight:700;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+  .metric .l{font-size:12px;color:var(--ink-soft);margin-top:6px}
+  .qrow{display:flex;gap:12px;align-items:baseline;padding:12px 0;border-top:1px solid var(--line);font-size:14px}
+  .qrow .mk{font-weight:700}
+  .qrow .q{flex:1;color:var(--ink)}
+  .qrow .st{font-size:12px;color:var(--faint);white-space:nowrap;font-variant-numeric:tabular-nums}
+
+  .err{color:var(--bad);margin-top:16px;font-size:14px;min-height:1em}
+  footer{margin-top:clamp(56px,8vw,96px);padding-top:26px;border-top:1px solid var(--line);color:var(--faint);
+    font-size:13px;display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
+  footer a{color:var(--ink-soft);text-decoration:none;transition:color .15s} footer a:hover{color:var(--acc)}
+
+  @media (max-width:820px){ .about{grid-template-columns:1fr} }
+  @media (prefers-reduced-motion: reduce){
+    *,*::before,*::after{animation:none!important;transition-duration:.01ms!important}
+    [data-reveal],[data-enter]{opacity:1!important;transform:none!important}
+    .timeline__line{transform:scaleY(1)} .step{opacity:1;transform:none} .answer .txt w{opacity:1}
+    .bg{display:none}
+  }
 </style>
 </head>
 <body>
+<div class="bg"><b></b><b></b><b></b></div>
 <div class="wrap">
   <div class="topbar">
     <div class="brand"><span class="dot"></span>NOVACODE</div>
-    <div class="tools">
-      <button class="icon-btn" id="langBtn">EN</button>
-      <button class="icon-btn" id="themeBtn"><svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>
+    <div class="seg" id="seg" data-on="ru">
+      <span class="thumb"></span>
+      <button id="ruBtn" aria-pressed="true">RU</button><button id="enBtn" aria-pressed="false">EN</button>
     </div>
   </div>
 
-  <div class="eyebrow">ReAct Agent · tool use</div>
-  <h1 data-i18n="title">AI-агент с инструментами</h1>
-  <p class="lede" data-i18n="lede">Задайте вопрос — агент сам решает, какие инструменты вызвать (Википедия, калькулятор, время), выполняет их по шагам и показывает всю цепочку рассуждений. ReAct-цикл написан на чистом Python, без фреймворков.</p>
+  <header class="hero">
+    <span class="eyebrow" data-enter="1"><span class="p"></span>ReAct Agent · tool use</span>
+    <h1 class="title" id="heroTitle" data-enter="2"></h1>
+    <p class="lede" data-enter="3" data-i18n="lede"></p>
+    <div class="dock" id="dock" data-enter="4"></div>
+  </header>
 
-  <div class="about">
-    <h2 data-i18n="aboutTitle">Что это и зачем</h2>
-    <ul>
-      <li data-i18n="about1">Обычная модель не умеет считать точно и не знает свежих фактов — она «галлюцинирует».</li>
-      <li data-i18n="about2">Агент рассуждает, вызывает нужный инструмент, читает результат и только потом отвечает.</li>
-      <li data-i18n="about3">Так строятся ассистенты, которые ищут в базе, считают, ходят в API — основа продакшн-агентов.</li>
-    </ul>
+  <div class="win" data-reveal>
+    <div class="win__bar"><span class="tl"><i></i><i></i><i></i></span><span class="win__ttl">agent — ReAct loop</span></div>
+    <div class="win__body">
+      <span class="label" data-i18n="qLabel">Вопрос</span>
+      <textarea id="q" data-i18n-ph="qPh"></textarea>
+      <div class="row">
+        <button class="btn" id="ask">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3l14 9-14 9V3z"/></svg>
+          <span data-i18n="askBtn">Запустить агента</span>
+        </button>
+        <span class="status" id="status"></span>
+      </div>
+      <div class="examples" id="examples"></div>
+    </div>
   </div>
 
-  <div class="toolchips" id="toolchips"></div>
-
-  <div class="label" data-i18n="qLabel">Вопрос</div>
-  <textarea id="q" data-i18n-ph="qPh" placeholder="Например: Кто написал «Преступление и наказание» и в каком году он родился?"></textarea>
-  <div class="row">
-    <button class="primary" id="ask" data-i18n="askBtn">Запустить агента</button>
-    <span class="status" id="status"></span>
-  </div>
-
-  <div class="examples" id="examples"></div>
-
-  <section class="block" id="result" style="display:none">
-    <div class="head"><h2 data-i18n="stepsTitle">Ход рассуждения</h2><p data-i18n="stepsDesc">каждый шаг: мысль → инструмент → результат</p></div>
-    <div class="steps" id="steps"></div>
-    <div class="head" style="margin-top:22px"><h2 data-i18n="ansTitle">Ответ</h2></div>
-    <div class="answer"><div class="txt" id="answer"></div></div>
-    <div class="foot-note" id="meta"></div>
+  <section class="blk" id="result">
+    <div class="blk__head" data-reveal>
+      <div class="blk__eyebrow" data-i18n="stepsEyebrow">Reasoning trace</div>
+      <h2 data-i18n="stepsTitle">Ход рассуждения</h2>
+      <p data-i18n="stepsDesc"></p>
+    </div>
+    <div class="timeline" id="timeline"><div class="timeline__line"></div><div id="steps"></div></div>
+    <div class="answer" id="ansBox">
+      <span class="cap" data-i18n="ansCap">Финальный ответ</span>
+      <div class="txt" id="answer"></div>
+      <div class="metaline" id="meta"></div>
+    </div>
   </section>
 
-  <section class="block">
-    <div class="head" style="display:flex;justify-content:space-between;align-items:flex-end;gap:16px">
-      <div><h2 data-i18n="evalTitle">Оценка качества</h2><p data-i18n="evalDesc">golden-набор из 6 задач · инструмент + ответ + продакшн-метрики</p></div>
-      <button class="primary" id="eval" data-i18n="evalBtn">Запустить</button>
+  <section class="blk">
+    <div class="blk__head" data-reveal>
+      <div class="blk__eyebrow" data-i18n="aboutEyebrow">Зачем это</div>
+      <h2 data-i18n="aboutTitle">Не выдумывает — проверяет</h2>
+    </div>
+    <div class="about">
+      <div class="card" data-reveal><h3><span class="n">1</span><span data-i18n="a1t">Точность</span></h3><p data-i18n="a1"></p></div>
+      <div class="card" data-reveal><h3><span class="n">2</span><span data-i18n="a2t">Инструменты</span></h3><p data-i18n="a2"></p></div>
+      <div class="card" data-reveal><h3><span class="n">3</span><span data-i18n="a3t">Продакшн</span></h3><p data-i18n="a3"></p></div>
+    </div>
+  </section>
+
+  <section class="blk">
+    <div class="blk__head" data-reveal style="display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap">
+      <div>
+        <div class="blk__eyebrow" data-i18n="evalEyebrow">Evaluation</div>
+        <h2 data-i18n="evalTitle">Оценка качества</h2>
+        <p data-i18n="evalDesc"></p>
+      </div>
+      <button class="btn btn--ghost" id="eval" data-i18n="evalBtn">Запустить эвал</button>
     </div>
     <div id="evalBox" style="display:none">
-      <div class="metricsgrid" id="metricsgrid"></div>
+      <div class="metrics" id="metrics"></div>
       <div id="evalRows"></div>
     </div>
   </section>
@@ -162,145 +297,160 @@
 
 <script>
   const $ = id => document.getElementById(id);
-  const root = document.documentElement;
   const esc = s => (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   const err = m => $('err').textContent = m || '';
+  const RM = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const sleep = ms => new Promise(r=>setTimeout(r, RM?0:ms));
   const TOOLMETA = {
     wikipedia_search:{c:'var(--wiki)', ru:'Википедия', en:'Wikipedia'},
     calculator:{c:'var(--calc)', ru:'Калькулятор', en:'Calculator'},
     current_time:{c:'var(--time)', ru:'Время', en:'Time'},
-    final:{c:'var(--ok)', ru:'Финал', en:'Final'},
+    final:{c:'var(--final)', ru:'Финал', en:'Final'},
   };
-
   const I18N = {
-    ru:{ title:"AI-агент с инструментами",
-      lede:"Задайте вопрос — агент сам решает, какие инструменты вызвать (Википедия, калькулятор, время), выполняет их по шагам и показывает всю цепочку рассуждений. ReAct-цикл написан на чистом Python, без фреймворков.",
-      aboutTitle:"Что это и зачем",
-      about1:"Обычная модель не умеет считать точно и не знает свежих фактов — она «галлюцинирует».",
-      about2:"Агент рассуждает, вызывает нужный инструмент, читает результат и только потом отвечает.",
-      about3:"Так строятся ассистенты, которые ищут в базе, считают, ходят в API — основа продакшн-агентов.",
-      qLabel:"Вопрос", qPh:"Например: Кто написал «Преступление и наказание» и в каком году он родился?",
-      askBtn:"Запустить агента", exTitle:"Примеры",
-      stepsTitle:"Ход рассуждения", stepsDesc:"каждый шаг: мысль → инструмент → результат",
-      ansTitle:"Ответ", running:"агент работает…", obsCap:"результат инструмента",
-      needQ:"Введите вопрос.", stopWarn:"Достигнут лимит шагов — ответ дан по собранному контексту.",
-      steps:"шагов", tok:"токенов",
-      evalTitle:"Оценка качества", evalDesc:"golden-набор из 6 задач · инструмент + ответ + продакшн-метрики", evalBtn:"Запустить", evalRun:"гоняю набор…",
-      mTool:"Верный инструмент", mAns:"Верный ответ", mSteps:"Шагов/задача", mTok:"Токенов/задача", mLat:"Latency/задача" },
-    en:{ title:"AI agent with tools",
-      lede:"Ask a question — the agent decides which tools to call (Wikipedia, calculator, time), runs them step by step and shows the whole reasoning chain. The ReAct loop is written in pure Python, no frameworks.",
-      aboutTitle:"What it is and why",
-      about1:"A plain model can't compute exactly and doesn't know fresh facts — it hallucinates.",
-      about2:"The agent reasons, calls the right tool, reads the result, and only then answers.",
-      about3:"This is how assistants that search a base, compute, and hit APIs are built — the core of production agents.",
-      qLabel:"Question", qPh:"e.g. Who wrote «Crime and Punishment» and in what year was he born?",
-      askBtn:"Run the agent", exTitle:"Examples",
-      stepsTitle:"Reasoning trace", stepsDesc:"each step: thought → tool → observation",
-      ansTitle:"Answer", running:"agent is working…", obsCap:"tool observation",
-      needQ:"Enter a question.", stopWarn:"Step limit reached — answer given from collected context.",
-      steps:"steps", tok:"tokens",
-      evalTitle:"Quality evaluation", evalDesc:"golden set of 6 tasks · tool + answer + production metrics", evalBtn:"Run", evalRun:"running the set…",
-      mTool:"Correct tool", mAns:"Correct answer", mSteps:"Steps/task", mTok:"Tokens/task", mLat:"Latency/task" }
+    ru:{ titleHTML:'AI‑агент, который <span class="grad">рассуждает</span>',
+      lede:"Задаёшь вопрос — агент сам решает, какие инструменты вызвать, выполняет их по шагам и показывает всю цепочку рассуждений. ReAct-цикл на чистом Python, без фреймворков.",
+      qLabel:"Вопрос", qPh:"Кто написал «Преступление и наказание» и в каком году он родился?", askBtn:"Запустить агента",
+      stepsEyebrow:"Reasoning trace", stepsTitle:"Ход рассуждения", stepsDesc:"Каждый шаг: мысль → инструмент → результат. Проявляется в реальном времени, как работает агент.",
+      ansCap:"Финальный ответ", obsCap:"результат инструмента",
+      aboutEyebrow:"Зачем это", aboutTitle:"Не выдумывает — проверяет",
+      a1t:"Точность", a1:"Обычная модель не умеет считать точно и не знает свежих фактов — она «галлюцинирует».",
+      a2t:"Инструменты", a2:"Агент рассуждает, вызывает нужный инструмент, читает результат и только потом отвечает.",
+      a3t:"Продакшн", a3:"Так строятся ассистенты, которые ищут в базе, считают, ходят в API — основа реальных агентов.",
+      evalEyebrow:"Evaluation", evalTitle:"Оценка качества", evalDesc:"Golden-набор из 6 задач: верный инструмент, верный ответ и продакшн-метрики (шаги, токены, latency).",
+      evalBtn:"Запустить эвал", evalRun:"гоняю набор…",
+      mTool:"Верный инструмент", mAns:"Верный ответ", mSteps:"Шагов / задача", mTok:"Токенов / задача", mLat:"Latency / задача",
+      running:"агент рассуждает", needQ:"Введите вопрос.", stopWarn:"достигнут лимит шагов", steps:"шагов", tok:"токенов" },
+    en:{ titleHTML:'An AI agent that <span class="grad">reasons</span>',
+      lede:"Ask a question — the agent decides which tools to call, runs them step by step and shows the whole reasoning chain. The ReAct loop is written in pure Python, no frameworks.",
+      qLabel:"Question", qPh:"Who wrote «Crime and Punishment» and in what year was he born?", askBtn:"Run the agent",
+      stepsEyebrow:"Reasoning trace", stepsTitle:"Reasoning trace", stepsDesc:"Each step: thought → tool → observation. Revealed in real time, the way the agent works.",
+      ansCap:"Final answer", obsCap:"tool observation",
+      aboutEyebrow:"Why it matters", aboutTitle:"It verifies, doesn't invent",
+      a1t:"Accuracy", a1:"A plain model can't compute exactly and doesn't know fresh facts — it hallucinates.",
+      a2t:"Tools", a2:"The agent reasons, calls the right tool, reads the result, and only then answers.",
+      a3t:"Production", a3:"This is how assistants that search a base, compute, and hit APIs are built — the core of real agents.",
+      evalEyebrow:"Evaluation", evalTitle:"Quality evaluation", evalDesc:"Golden set of 6 tasks: correct tool, correct answer and production metrics (steps, tokens, latency).",
+      evalBtn:"Run eval", evalRun:"running…",
+      mTool:"Correct tool", mAns:"Correct answer", mSteps:"Steps / task", mTok:"Tokens / task", mLat:"Latency / task",
+      running:"agent is reasoning", needQ:"Enter a question.", stopWarn:"step limit reached", steps:"steps", tok:"tokens" }
   };
   let uiLang = localStorage.getItem('ui_lang') || 'ru';
-  let META = null;
+  let META=null, lastRun=null;
 
   function applyLang(l){
-    uiLang = l; localStorage.setItem('ui_lang', l); const t = I18N[l];
-    document.querySelectorAll('[data-i18n]').forEach(e => { const k=e.dataset.i18n; if(t[k]!=null) e.textContent = t[k]; });
-    document.querySelectorAll('[data-i18n-ph]').forEach(e => { const k=e.dataset.i18nPh; if(t[k]!=null) e.placeholder = t[k]; });
-    $('langBtn').textContent = l === 'ru' ? 'EN' : 'RU'; root.setAttribute('lang', l);
-    if(META) renderChips();
+    uiLang=l; localStorage.setItem('ui_lang',l); const t=I18N[l];
+    document.documentElement.setAttribute('lang',l);
+    $('heroTitle').innerHTML = t.titleHTML;
+    document.querySelectorAll('[data-i18n]').forEach(e=>{const k=e.dataset.i18n; if(t[k]!=null) e.textContent=t[k];});
+    document.querySelectorAll('[data-i18n-ph]').forEach(e=>{const k=e.dataset.i18nPh; if(t[k]!=null) e.placeholder=t[k];});
+    $('seg').dataset.on = l;
+    $('ruBtn').setAttribute('aria-pressed', l==='ru'); $('enBtn').setAttribute('aria-pressed', l==='en');
+    if(META) renderMeta();
+    if(lastRun) renderResult(lastRun, false);
   }
-  $('langBtn').onclick = () => applyLang(uiLang === 'ru' ? 'en' : 'ru');
+  $('ruBtn').onclick=()=>applyLang('ru'); $('enBtn').onclick=()=>applyLang('en');
 
-  function applyTheme(th){
-    root.setAttribute('data-theme', th); localStorage.setItem('ui_theme', th);
-    $('themeIcon').innerHTML = th === 'dark'
-      ? '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>'
-      : '<circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>';
+  /* reveal on scroll */
+  const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('shown');io.unobserve(e.target);}}),{threshold:.14});
+  const observeReveals=()=>document.querySelectorAll('[data-reveal]:not(.shown)').forEach(el=>io.observe(el));
+
+  /* macOS Dock magnify — transform only, centers cached on enter/resize */
+  let dockCenters=[];
+  function measureDock(){ dockCenters=[...$('dock').children].map(c=>{const r=c.getBoundingClientRect();return r.left+r.width/2;}); }
+  if(!RM){
+    const dock=$('dock');
+    dock.addEventListener('pointerenter', measureDock);
+    dock.addEventListener('pointermove', e=>{
+      const chips=dock.children;
+      for(let i=0;i<chips.length;i++){ const k=Math.max(0,1-Math.abs(e.clientX-dockCenters[i])/130);
+        chips[i].style.transform=`translateY(${(-10*k).toFixed(1)}px) scale(${(1+.32*k).toFixed(3)})`; }
+    }, {passive:true});
+    dock.addEventListener('pointerleave', ()=>{ for(const c of dock.children) c.style.transform=''; });
+    window.addEventListener('resize', ()=>{ for(const c of $('dock').children) c.style.transform=''; }, {passive:true});
   }
-  $('themeBtn').onclick = () => applyTheme(root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
-  applyTheme(localStorage.getItem('ui_theme') || 'light'); applyLang(uiLang);
 
-  function renderChips(){
-    $('toolchips').innerHTML = META.tools.map(t => {
-      const m = TOOLMETA[t.name] || {c:'var(--sky-500)', ru:t.name, en:t.name};
-      return `<span class="chip"><span class="d" style="background:${m.c}"></span><b>${m[uiLang]}</b></span>`;
-    }).join('');
-    $('examples').innerHTML = META.examples.map(e =>
-      `<button class="ex">${esc(e)}</button>`).join('');
-    $('examples').querySelectorAll('.ex').forEach(b =>
-      b.onclick = () => { $('q').value = b.textContent; $('q').focus(); });
+  function renderMeta(){
+    $('dock').innerHTML = META.tools.map(t=>{const m=TOOLMETA[t.name]||{c:'var(--acc)',ru:t.name,en:t.name};
+      return `<span class="chip"><span class="d" style="background:${m.c}"></span><b>${m[uiLang]}</b></span>`;}).join('');
+    $('examples').innerHTML = META.examples.map(e=>`<button class="ex">${esc(e)}</button>`).join('');
+    $('examples').querySelectorAll('.ex').forEach(b=> b.onclick=()=>{ $('q').value=b.textContent.trim(); $('q').focus(); });
   }
+  fetch('/api/meta').then(r=>r.json()).then(m=>{ META=m; renderMeta(); });
 
-  fetch('/api/meta').then(r=>r.json()).then(m => { META = m; renderChips(); });
-
-  function stepCard(s){
-    const m = TOOLMETA[s.action] || {c:'var(--sky-500)', ru:s.action, en:s.action};
-    const isFinal = s.action === 'final';
-    let body = '';
-    if(!isFinal){
-      body = `<div class="card">
-        <div class="in">→ ${esc(s.input)}</div>
-        <div class="obs"><span class="cap">${I18N[uiLang].obsCap}</span>${esc(s.observation)}</div></div>`;
-    }
+  function stepHTML(s){
+    const m=TOOLMETA[s.action]||{c:'var(--acc)',ru:s.action,en:s.action}; const isFinal=s.action==='final';
+    const io=isFinal?'':`<div class="io"><div class="in">${esc(s.input)}</div>
+      <div class="obs"><span class="cap">${I18N[uiLang].obsCap}</span>${esc(s.observation)}</div></div>`;
     return `<div class="step ${isFinal?'final':''}"><span class="node"></span>
-      <span class="act"><span class="d" style="background:${m.c}"></span>${m[uiLang]}</span>
-      ${s.thought ? `<div class="th">${esc(s.thought)}</div>` : ''}
-      ${body}</div>`;
+      <div class="act"><span class="d" style="background:${m.c}"></span>${m[uiLang]}<span class="num">· ${s.n}</span></div>
+      ${s.thought?`<div class="th">${esc(s.thought)}</div>`:''}${io}</div>`;
   }
-
+  function countUp(el,target,suffix=''){
+    if(RM){ el.textContent=target+suffix; return; }
+    const t0=performance.now(), dur=850, isF=String(target).includes('.');
+    (function tick(now){ const p=Math.min(1,(now-t0)/dur), e=1-Math.pow(1-p,3), v=target*e;
+      el.textContent=(isF?v.toFixed(1):Math.round(v))+suffix; if(p<1) requestAnimationFrame(tick); else el.textContent=target+suffix; })(t0);
+  }
+  async function streamWords(el,text){
+    const words=String(text).split(/(\s+)/);
+    el.innerHTML=words.map(w=>/^\s+$/.test(w)?w:`<w>${esc(w)}</w>`).join('');
+    const ws=el.querySelectorAll('w'); if(RM){ ws.forEach(w=>w.classList.add('on')); return; }
+    for(let i=0;i<ws.length;i++){ ws[i].classList.add('on'); if(i%2===0) await sleep(15); }
+  }
+  async function renderResult(r, animate){
+    if(!animate){
+      $('steps').innerHTML=r.steps.map(stepHTML).join('');
+      $('steps').querySelectorAll('.step').forEach(s=>s.classList.add('in'));
+      $('timeline').classList.add('draw'); $('answer').textContent=r.answer;
+      const u=r.usage||{},t=I18N[uiLang],tot=(u.prompt_tokens||0)+(u.completion_tokens||0);
+      $('meta').innerHTML=`<span><b>${r.steps.length}</b> ${t.steps}</span><span><b>${tot}</b> ${t.tok}</span>`+(r.stopped?`<span class="warn">⚠ ${t.stopWarn}</span>`:'');
+      $('result').style.display='block'; return;
+    }
+    $('result').style.display='block'; $('answer').innerHTML=''; $('meta').innerHTML='';
+    const tl=$('timeline'); tl.classList.remove('draw');
+    $('steps').innerHTML=r.steps.map(stepHTML).join('');
+    const els=[...$('steps').querySelectorAll('.step')], per=330;
+    tl.style.setProperty('--drawdur',(Math.max(1,els.length)*per/1000)+'s');
+    void tl.offsetWidth; tl.classList.add('draw');
+    $('result').scrollIntoView({behavior:RM?'auto':'smooth',block:'start'});
+    for(const el of els){ el.classList.add('in'); await sleep(per); }
+    const u=r.usage||{},t=I18N[uiLang],tot=(u.prompt_tokens||0)+(u.completion_tokens||0);
+    await streamWords($('answer'), r.answer);
+    $('meta').innerHTML=`<span><b>${r.steps.length}</b> ${t.steps}</span><span><b>${tot}</b> ${t.tok}</span>`+(r.stopped?`<span class="warn">⚠ ${t.stopWarn}</span>`:'');
+  }
   async function runAgent(){
-    const t = I18N[uiLang]; err('');
-    const q = $('q').value.trim();
-    if(!q){ err(t.needQ); return; }
-    $('ask').disabled = true;
-    $('status').innerHTML = `<span class="spin"></span>${t.running}`;
-    $('result').style.display = 'none';
-    try{
-      const r = await (await fetch('/api/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:q})})).json();
-      if(r.error){ err(r.error); return; }
-      $('steps').innerHTML = r.steps.map((s,i)=>{
-        const html = stepCard(s); return html.replace('class="step ', `style="animation-delay:${i*.06}s" class="step `);
-      }).join('');
-      $('answer').textContent = r.answer;
-      const u = r.usage || {};
-      const tokTotal = (u.prompt_tokens||0)+(u.completion_tokens||0);
-      $('meta').innerHTML = `<span>${r.steps.length} ${t.steps}</span><span>${tokTotal} ${t.tok}</span>` +
-        (r.stopped ? `<span class="warn">⚠ ${t.stopWarn}</span>` : '');
-      $('result').style.display = 'block';
-      $('result').scrollIntoView({behavior:'smooth', block:'start'});
-    } catch(e){ err(String(e)); }
-    finally { $('ask').disabled = false; $('status').textContent = ''; }
+    const t=I18N[uiLang]; err(''); const q=$('q').value.trim(); if(!q){ err(t.needQ); return; }
+    $('ask').disabled=true; $('status').innerHTML=`<span class="think"><i></i><i></i><i></i></span>${t.running}`;
+    try{ const r=await (await fetch('/api/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:q})})).json();
+      if(r.error){ err(r.error); return; } lastRun=r; await renderResult(r,true);
+    }catch(e){ err(String(e)); } finally{ $('ask').disabled=false; $('status').textContent=''; }
   }
-  $('ask').onclick = runAgent;
-  $('q').addEventListener('keydown', e => { if((e.metaKey||e.ctrlKey) && e.key==='Enter') runAgent(); });
+  $('ask').onclick=runAgent;
+  $('q').addEventListener('keydown',e=>{ if((e.metaKey||e.ctrlKey)&&e.key==='Enter') runAgent(); });
 
-  $('eval').onclick = async () => {
-    const t = I18N[uiLang]; err('');
-    $('eval').disabled = true; $('eval').textContent = t.evalRun;
-    try{
-      const r = await (await fetch('/api/eval',{method:'POST'})).json();
+  $('eval').onclick=async()=>{
+    const t=I18N[uiLang]; err(''); $('eval').disabled=true; $('eval').textContent=t.evalRun;
+    try{ const r=await (await fetch('/api/eval',{method:'POST'})).json();
       if(r.error){ err(r.error); return; }
-      const pct = v => Math.round(v*100)+'%';
-      const col = v => v>=0.85?'var(--ok)':v>=0.6?'var(--sky-600)':'var(--bad)';
-      $('metricsgrid').innerHTML =
-        `<div class="metric"><div class="v" style="color:${col(r.tool_accuracy)}">${pct(r.tool_accuracy)}</div><div class="l">${t.mTool}</div></div>
-         <div class="metric"><div class="v" style="color:${col(r.answer_accuracy)}">${pct(r.answer_accuracy)}</div><div class="l">${t.mAns}</div></div>
-         <div class="metric"><div class="v">${r.avg_steps}</div><div class="l">${t.mSteps}</div></div>
-         <div class="metric"><div class="v">${r.avg_tokens}</div><div class="l">${t.mTok}</div></div>
-         <div class="metric"><div class="v">${r.avg_latency}s</div><div class="l">${t.mLat}</div></div>`;
-      $('evalRows').innerHTML = r.rows.map(x => {
-        const ok = x.tool_hit && x.answer_hit;
-        return `<div class="qrow"><span style="color:${ok?'var(--ok)':'var(--bad)'}">${ok?'✓':'✕'}</span>
-          <span style="flex:1">${esc(x.q)}</span>
-          <span class="st">${esc(x.tool)} · ${x.steps} · ${x.latency}s</span></div>`;
-      }).join('');
-      $('evalBox').style.display = 'block';
-    } catch(e){ err(String(e)); }
-    finally { $('eval').disabled = false; $('eval').textContent = t.evalBtn; }
+      const col=v=>v>=.85?'var(--calc)':v>=.6?'var(--time)':'var(--bad)';
+      $('metrics').innerHTML=
+        `<div class="metric"><div class="v" style="color:${col(r.tool_accuracy)}" data-c="${Math.round(r.tool_accuracy*100)}" data-s="%">0%</div><div class="l">${t.mTool}</div></div>
+         <div class="metric"><div class="v" style="color:${col(r.answer_accuracy)}" data-c="${Math.round(r.answer_accuracy*100)}" data-s="%">0%</div><div class="l">${t.mAns}</div></div>
+         <div class="metric"><div class="v" data-c="${r.avg_steps}" data-s="">0</div><div class="l">${t.mSteps}</div></div>
+         <div class="metric"><div class="v" data-c="${r.avg_tokens}" data-s="">0</div><div class="l">${t.mTok}</div></div>
+         <div class="metric"><div class="v" data-c="${r.avg_latency}" data-s="s">0s</div><div class="l">${t.mLat}</div></div>`;
+      $('evalBox').style.display='block';
+      $('metrics').querySelectorAll('.v').forEach(el=>countUp(el,parseFloat(el.dataset.c),el.dataset.s));
+      $('evalRows').innerHTML=r.rows.map(x=>{const ok=x.tool_hit&&x.answer_hit;
+        return `<div class="qrow"><span class="mk" style="color:${ok?'var(--calc)':'var(--bad)'}">${ok?'✓':'✕'}</span>
+          <span class="q">${esc(x.q)}</span><span class="st">${esc(x.tool)} · ${x.steps} · ${x.latency}s</span></div>`;}).join('');
+      $('evalBox').scrollIntoView({behavior:RM?'auto':'smooth',block:'nearest'});
+    }catch(e){ err(String(e)); } finally{ $('eval').disabled=false; $('eval').textContent=t.evalBtn; }
   };
+
+  applyLang(uiLang); observeReveals();
+  requestAnimationFrame(()=>requestAnimationFrame(()=>document.body.classList.add('ready')));
 </script>
 </body>
 </html>

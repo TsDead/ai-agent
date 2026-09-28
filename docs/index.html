@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Agent · live demo · NOVACODE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F5F5F7; --panel:#FFFFFF; --panel-2:#FBFBFD; --line:#E3E3E8; --line-2:#D2D2D7;
+    --ink:#1D1D1F; --ink-soft:#6E6E73; --faint:#86868B;
+    --acc:#0071E3; --acc-hi:#0077ED; --acc-deep:#0058B0; --on-acc:#fff;
+    --wiki:#AF52DE; --calc:#34C759; --time:#007AFF; --final:#30D158; --bad:#FF3B30;
+    --grad-a:#0071E3; --grad-b:#5AC8FA; --grad-c:#34C759;
+    --font:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Inter","Helvetica Neue",Arial,sans-serif;
+    --spring:cubic-bezier(.34,1.56,.64,1);
+    --ease:cubic-bezier(.22,1,.36,1);
+    --pad:clamp(20px,5vw,48px); --max:980px;
+    --shadow-win:0 24px 60px -18px rgba(0,0,0,.16), 0 6px 16px rgba(0,0,0,.05);
+    --shadow-sm:0 2px 8px rgba(0,0,0,.04), 0 1px 2px rgba(0,0,0,.04);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#000000; --panel:#1C1C1E; --panel-2:#262629; --line:#38383C; --line-2:#48484C;
+      --ink:#F5F5F7; --ink-soft:#AEAEB2; --faint:#8E8E93;
+      --acc:#0A84FF; --acc-hi:#409CFF; --acc-deep:#0060DF; --on-acc:#fff;
+      --wiki:#BF5AF2; --calc:#30D158; --time:#0A84FF; --final:#30D158; --bad:#FF453A;
+      --grad-a:#0A84FF; --grad-b:#64D2FF; --grad-c:#30D158;
+      --shadow-win:0 30px 70px -20px rgba(0,0,0,.7), 0 6px 16px rgba(0,0,0,.4);
+      --shadow-sm:0 2px 10px rgba(0,0,0,.4);
+    }
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  @media (prefers-reduced-motion: no-preference){html{scroll-behavior:smooth}}
+  body{margin:0;background:var(--bg);color:var(--ink);font:400 17px/1.55 var(--font);
+    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;overflow-x:hidden;min-height:100vh}
+  h1,h2,h3{margin:0;font-weight:600;line-height:1.06;letter-spacing:-.022em;text-wrap:balance}
+  p{margin:0}
+  a{color:inherit}
+  ::selection{background:var(--acc);color:#fff}
+  :focus-visible{outline:2px solid var(--acc);outline-offset:3px;border-radius:8px}
+
+  .bg{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+  .bg b{position:absolute;border-radius:50%;filter:blur(70px);opacity:.5}
+  .bg b:nth-child(1){width:520px;height:520px;left:-140px;top:-120px;background:radial-gradient(circle,rgba(0,113,227,.28),transparent 70%);animation:drift1 22s ease-in-out infinite}
+  .bg b:nth-child(2){width:460px;height:460px;right:-120px;top:180px;background:radial-gradient(circle,rgba(52,199,89,.20),transparent 70%);animation:drift2 26s ease-in-out infinite}
+  .bg b:nth-child(3){width:400px;height:400px;left:30%;bottom:-160px;background:radial-gradient(circle,rgba(175,82,222,.16),transparent 70%);animation:drift3 30s ease-in-out infinite}
+  @keyframes drift1{50%{transform:translate(60px,50px) scale(1.1)}}
+  @keyframes drift2{50%{transform:translate(-50px,40px) scale(1.08)}}
+  @keyframes drift3{50%{transform:translate(40px,-40px) scale(1.12)}}
+  .wrap{position:relative;z-index:1;max-width:var(--max);margin:0 auto;padding:0 var(--pad) 80px}
+
+  .topbar{display:flex;align-items:center;justify-content:space-between;height:64px;position:sticky;top:0;z-index:40;
+    margin:0 calc(-1*var(--pad));padding:0 var(--pad);
+    background:color-mix(in srgb,var(--bg) 72%,transparent);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px)}
+  .brand{font-weight:600;font-size:16px;letter-spacing:-.01em;display:flex;align-items:center;gap:9px}
+  .brand .dot{width:9px;height:9px;border-radius:50%;background:var(--acc);animation:breathe 3s var(--ease) infinite}
+  @keyframes breathe{50%{transform:scale(1.35);opacity:.65}}
+  .seg{position:relative;display:flex;background:color-mix(in srgb,var(--ink) 8%,transparent);border-radius:9px;padding:3px}
+  .seg button{position:relative;z-index:1;font:600 13px/1 var(--font);color:var(--ink-soft);background:none;border:0;padding:7px 13px;border-radius:7px;cursor:pointer;transition:color .25s}
+  .seg button[aria-pressed="true"]{color:var(--ink)}
+  .seg .thumb{position:absolute;z-index:0;top:3px;bottom:3px;width:calc(50% - 3px);border-radius:7px;background:var(--panel);
+    box-shadow:var(--shadow-sm);transition:transform .38s var(--spring)}
+  .seg[data-on="en"] .thumb{transform:translateX(100%)}
+
+  [data-enter]{opacity:0;transform:translateY(18px)}
+  body.ready [data-enter]{opacity:1;transform:none;transition:opacity .7s var(--ease),transform .7s var(--ease)}
+  body.ready [data-enter="1"]{transition-delay:.05s} body.ready [data-enter="2"]{transition-delay:.13s}
+  body.ready [data-enter="3"]{transition-delay:.21s} body.ready [data-enter="4"]{transition-delay:.29s}
+
+  .hero{padding:clamp(44px,8vw,92px) 0 clamp(28px,5vw,52px)}
+  .eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;letter-spacing:.01em;color:var(--acc);
+    background:color-mix(in srgb,var(--acc) 10%,transparent);padding:6px 12px;border-radius:999px}
+  .eyebrow .p{width:7px;height:7px;border-radius:50%;background:var(--acc)}
+  h1.title{font-size:clamp(32px,5vw,56px);line-height:1.05;letter-spacing:-.03em;font-weight:700;margin:20px 0 0;max-width:20ch;overflow-wrap:break-word}
+  .title .grad{background:linear-gradient(115deg,var(--grad-a),var(--grad-b) 55%,var(--grad-c));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .lede{margin:20px 0 0;max-width:46ch;font-size:clamp(17px,1.8vw,20px);line-height:1.5;color:var(--ink-soft);font-weight:400}
+
+  .dock{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px;max-width:none}
+  .chip{display:inline-flex;align-items:center;gap:9px;background:var(--panel);border:1px solid var(--line);border-radius:14px;
+    padding:11px 16px;font-size:14px;color:var(--ink-soft);box-shadow:var(--shadow-sm);cursor:default;transform-origin:bottom center;
+    transition:transform .18s var(--ease),box-shadow .18s;will-change:transform}
+  .chip .d{width:10px;height:10px;border-radius:50%}
+  .chip b{font-weight:600;font-size:14px;color:var(--ink)}
+
+  .win{margin-top:clamp(30px,5vw,48px);background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:var(--shadow-win)}
+  .win__bar{display:flex;align-items:center;gap:8px;padding:13px 16px;border-bottom:1px solid var(--line);
+    background:linear-gradient(color-mix(in srgb,var(--panel) 60%,var(--bg)),var(--panel))}
+  .tl{display:flex;gap:8px}
+  .tl i{width:12px;height:12px;border-radius:50%;transition:filter .15s}
+  .tl i:nth-child(1){background:#FF5F57} .tl i:nth-child(2){background:#FEBC2E} .tl i:nth-child(3){background:#28C840}
+  .win__bar:hover .tl i{filter:brightness(1.05)}
+  .win__ttl{margin:0 auto;transform:translateX(-24px);font-size:13px;font-weight:500;color:var(--faint)}
+  .win__body{padding:22px}
+
+  .keyrow{margin-bottom:16px}
+  .keyhint{display:block;margin-top:7px;font-size:12.5px;color:var(--faint)}
+  .keyhint a{color:var(--acc);text-decoration:none}
+  .label{font-size:12px;font-weight:600;letter-spacing:.02em;color:var(--faint);margin:0 0 9px;display:block;text-transform:uppercase}
+  textarea,input{width:100%;background:var(--panel-2);border:1px solid var(--line-2);border-radius:12px;color:var(--ink);
+    padding:14px 15px;font:400 16px/1.5 var(--font);resize:vertical;transition:border-color .2s,box-shadow .2s,background-color .2s}
+  input{resize:none}
+  textarea{min-height:76px}
+  textarea::placeholder,input::placeholder{color:var(--faint)}
+  textarea:focus,input:focus{outline:none;border-color:var(--acc);background:var(--panel);box-shadow:0 0 0 4px color-mix(in srgb,var(--acc) 18%,transparent)}
+  .row{display:flex;gap:12px;margin-top:14px;flex-wrap:wrap;align-items:center}
+  .btn{display:inline-flex;align-items:center;gap:9px;font:600 15px/1 var(--font);letter-spacing:-.01em;
+    background:var(--acc);color:var(--on-acc);border:0;border-radius:980px;padding:13px 24px;cursor:pointer;
+    box-shadow:0 6px 18px -6px color-mix(in srgb,var(--acc) 70%,transparent);
+    transition:transform .16s var(--spring),background-color .16s,box-shadow .16s}
+  .btn:hover{background:var(--acc-hi);transform:scale(1.035);box-shadow:0 10px 24px -6px color-mix(in srgb,var(--acc) 75%,transparent)}
+  .btn:active{transform:scale(.97)}
+  .btn:disabled{opacity:.5;cursor:default;box-shadow:none;transform:none}
+  .btn svg{width:15px;height:15px}
+  .btn--ghost{background:var(--panel);color:var(--acc);border:1px solid var(--line-2);box-shadow:var(--shadow-sm)}
+  .btn--ghost:hover{background:var(--panel-2);transform:scale(1.035);box-shadow:var(--shadow-sm)}
+  .status{font-size:14px;color:var(--ink-soft);display:inline-flex;align-items:center;gap:9px}
+  .think{display:inline-flex;gap:4px;align-items:center}
+  .think i{width:6px;height:6px;border-radius:50%;background:var(--acc);animation:bob 1s var(--ease) infinite}
+  .think i:nth-child(2){animation-delay:.15s} .think i:nth-child(3){animation-delay:.3s}
+  @keyframes bob{0%,100%{opacity:.3;transform:translateY(0)}50%{opacity:1;transform:translateY(-4px)}}
+
+  .examples{margin-top:16px;display:flex;flex-direction:column;gap:9px}
+  .ex{position:relative;text-align:left;background:var(--panel-2);border:1px solid var(--line);border-radius:12px;
+    padding:12px 15px 12px 40px;color:var(--ink-soft);cursor:pointer;font:400 14.5px/1.45 var(--font);
+    transition:border-color .18s,color .18s,transform .18s var(--ease),background-color .18s;width:100%}
+  .ex::before{content:"›";position:absolute;left:16px;top:50%;transform:translateY(-50%);color:var(--acc);font-weight:700;transition:transform .2s var(--ease)}
+  .ex:hover{border-color:var(--acc);color:var(--ink);transform:translateX(3px)}
+  .ex:hover::before{transform:translateY(-50%) translateX(3px)}
+
+  [data-reveal]{opacity:0;transform:translateY(28px);transition:opacity .7s var(--ease),transform .7s var(--ease)}
+  [data-reveal].shown{opacity:1;transform:none}
+
+  section.blk{margin-top:clamp(52px,8vw,92px)}
+  .blk__head{margin-bottom:22px}
+  .blk__eyebrow{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+  .blk__head h2{font-size:clamp(26px,3.6vw,40px);margin-top:9px;font-weight:700;letter-spacing:-.025em}
+  .blk__head p{margin-top:9px;color:var(--ink-soft);max-width:56ch;font-size:16px}
+
+  .about{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:var(--shadow-sm);
+    transition:transform .3s var(--ease),box-shadow .3s}
+  .card:hover{transform:translateY(-6px);box-shadow:var(--shadow-win)}
+  .card h3{font-size:16px;font-weight:600;margin-bottom:9px;display:flex;align-items:center;gap:9px}
+  .card h3 .n{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:8px;font-size:12px;color:#fff;background:var(--acc)}
+  .card p{font-size:14.5px;color:var(--ink-soft);line-height:1.5}
+
+  #result{display:none}
+  .timeline{position:relative;margin-left:7px;padding-left:30px}
+  .timeline__line{position:absolute;left:7px;top:8px;bottom:10px;width:2px;
+    background:linear-gradient(var(--acc),var(--calc));transform:scaleY(0);transform-origin:top;transition:transform var(--drawdur,1.2s) linear}
+  .timeline.draw .timeline__line{transform:scaleY(1)}
+  .step{position:relative;margin-bottom:18px;opacity:0;transform:translateY(12px);transition:opacity .45s var(--ease),transform .45s var(--ease)}
+  .step.in{opacity:1;transform:none}
+  .step .node{position:absolute;left:-30px;top:2px;width:16px;height:16px;border-radius:50%;background:var(--panel);
+    border:2px solid var(--acc);box-shadow:0 0 0 3px var(--bg)}
+  .step.in .node{animation:pop .4s var(--spring)}
+  .step.final .node{background:var(--final);border-color:var(--final)}
+  @keyframes pop{0%{transform:scale(.4)}60%{transform:scale(1.2)}100%{transform:scale(1)}}
+  .step .act{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;letter-spacing:.01em}
+  .step .act .d{width:8px;height:8px;border-radius:50%}
+  .step .act .num{color:var(--faint);font-weight:500}
+  .step .th{color:var(--ink-soft);font-size:14.5px;margin:8px 0 9px;line-height:1.5}
+  .step .io{background:var(--panel);border:1px solid var(--line);border-radius:13px;overflow:hidden;box-shadow:var(--shadow-sm)}
+  .step .io .in{padding:11px 14px;font:600 13px/1.5 var(--font);color:var(--acc);border-bottom:1px solid var(--line);word-break:break-word;background:var(--panel-2)}
+  .step .io .in::before{content:"› ";color:var(--faint)}
+  .step .io .obs{padding:12px 14px;font-size:13.5px;color:var(--ink-soft);white-space:pre-wrap;line-height:1.55}
+  .step .io .obs .cap{display:block;font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);margin-bottom:6px}
+
+  .answer{margin-top:10px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px 22px;box-shadow:var(--shadow-sm);
+    border-left:3px solid var(--final)}
+  .answer .cap{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--final);margin-bottom:10px;display:block}
+  .answer .txt{white-space:pre-wrap;font-size:16px;line-height:1.65}
+  .answer .txt w{opacity:0;transition:opacity .3s ease-out}
+  .answer .txt w.on{opacity:1}
+  .metaline{margin-top:14px;display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--faint)}
+  .metaline .warn{color:var(--bad)} .metaline b{color:var(--acc);font-weight:600}
+
+  .metrics{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+  .metric{flex:1;min-width:135px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px 20px;box-shadow:var(--shadow-sm);
+    transition:transform .3s var(--ease),box-shadow .3s}
+  .metric:hover{transform:translateY(-5px);box-shadow:var(--shadow-win)}
+  .metric .v{font-size:32px;font-weight:700;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+  .metric .l{font-size:12px;color:var(--ink-soft);margin-top:6px}
+  .qrow{display:flex;gap:12px;align-items:baseline;padding:12px 0;border-top:1px solid var(--line);font-size:14px}
+  .qrow .mk{font-weight:700}
+  .qrow .q{flex:1;color:var(--ink)}
+  .qrow .st{font-size:12px;color:var(--faint);white-space:nowrap;font-variant-numeric:tabular-nums}
+
+  .err{color:var(--bad);margin-top:16px;font-size:14px;min-height:1em}
+  footer{margin-top:clamp(56px,8vw,96px);padding-top:26px;border-top:1px solid var(--line);color:var(--faint);
+    font-size:13px;display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
+  footer a{color:var(--ink-soft);text-decoration:none;transition:color .15s} footer a:hover{color:var(--acc)}
+
+  @media (max-width:820px){ .about{grid-template-columns:1fr} }
+  @media (prefers-reduced-motion: reduce){
+    *,*::before,*::after{animation:none!important;transition-duration:.01ms!important}
+    [data-reveal],[data-enter]{opacity:1!important;transform:none!important}
+    .timeline__line{transform:scaleY(1)} .step{opacity:1;transform:none} .answer .txt w{opacity:1}
+    .bg{display:none}
+  }
+</style>
+</head>
+<body>
+<div class="bg"><b></b><b></b><b></b></div>
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand"><span class="dot"></span>NOVACODE</div>
+    <div class="seg" id="seg" data-on="ru">
+      <span class="thumb"></span>
+      <button id="ruBtn" aria-pressed="true">RU</button><button id="enBtn" aria-pressed="false">EN</button>
+    </div>
+  </div>
+
+  <header class="hero">
+    <span class="eyebrow" data-enter="1"><span class="p"></span>ReAct Agent · live demo</span>
+    <h1 class="title" id="heroTitle" data-enter="2"></h1>
+    <p class="lede" data-enter="3" data-i18n="lede"></p>
+    <div class="dock" id="dock" data-enter="4"></div>
+  </header>
+
+  <div class="win" data-reveal>
+    <div class="win__bar"><span class="tl"><i></i><i></i><i></i></span><span class="win__ttl">agent — ReAct loop (browser)</span></div>
+    <div class="win__body">
+      <div class="keyrow">
+        <span class="label" data-i18n="keyLabel">Ключ Groq</span>
+        <input id="key" type="password" autocomplete="off" spellcheck="false" placeholder="gsk_...">
+        <span class="keyhint" data-i18n-html="keyHint"></span>
+      </div>
+      <span class="label" data-i18n="qLabel">Вопрос</span>
+      <textarea id="q" data-i18n-ph="qPh"></textarea>
+      <div class="row">
+        <button class="btn" id="ask">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3l14 9-14 9V3z"/></svg>
+          <span data-i18n="askBtn">Запустить агента</span>
+        </button>
+        <span class="status" id="status"></span>
+      </div>
+      <div class="examples" id="examples"></div>
+    </div>
+  </div>
+
+  <section class="blk" id="result">
+    <div class="blk__head" data-reveal>
+      <div class="blk__eyebrow" data-i18n="stepsEyebrow">Reasoning trace</div>
+      <h2 data-i18n="stepsTitle">Ход рассуждения</h2>
+      <p data-i18n="stepsDesc"></p>
+    </div>
+    <div class="timeline" id="timeline"><div class="timeline__line"></div><div id="steps"></div></div>
+    <div class="answer" id="ansBox">
+      <span class="cap" data-i18n="ansCap">Финальный ответ</span>
+      <div class="txt" id="answer"></div>
+      <div class="metaline" id="meta"></div>
+    </div>
+  </section>
+
+  <section class="blk">
+    <div class="blk__head" data-reveal>
+      <div class="blk__eyebrow" data-i18n="aboutEyebrow">Зачем это</div>
+      <h2 data-i18n="aboutTitle">Не выдумывает — проверяет</h2>
+    </div>
+    <div class="about">
+      <div class="card" data-reveal><h3><span class="n">1</span><span data-i18n="a1t">Точность</span></h3><p data-i18n="a1"></p></div>
+      <div class="card" data-reveal><h3><span class="n">2</span><span data-i18n="a2t">Инструменты</span></h3><p data-i18n="a2"></p></div>
+      <div class="card" data-reveal><h3><span class="n">3</span><span data-i18n="a3t">Продакшн</span></h3><p data-i18n="a3"></p></div>
+    </div>
+  </section>
+
+  <section class="blk">
+    <div class="blk__head" data-reveal style="display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap">
+      <div>
+        <div class="blk__eyebrow" data-i18n="evalEyebrow">Evaluation</div>
+        <h2 data-i18n="evalTitle">Оценка качества</h2>
+        <p data-i18n="evalDesc"></p>
+      </div>
+      <button class="btn btn--ghost" id="eval" data-i18n="evalBtn">Запустить эвал</button>
+    </div>
+    <div id="evalBox" style="display:none">
+      <div class="metrics" id="metrics"></div>
+      <div id="evalRows"></div>
+    </div>
+  </section>
+
+  <div class="err" id="err"></div>
+  <footer>
+    <span>© 2026 NOVACODE</span>
+    <span>ReAct · tools · LLM (Groq) · <span data-i18n="footNote">браузерное демо, исходник на Python</span> &nbsp;·&nbsp;
+      <a href="https://github.com/TsDead/ai-agent" target="_blank" rel="noopener">GitHub</a> ·
+      <a href="https://new-coder.ru" target="_blank" rel="noopener">new-coder.ru</a></span>
+  </footer>
+</div>
+
+<script>
+  const $ = id => document.getElementById(id);
+  const esc = s => (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const err = m => $('err').textContent = m || '';
+  const RM = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const sleep = ms => new Promise(r=>setTimeout(r, RM?0:ms));
+
+  /* ── LLM (Groq, из браузера — ключ вводит посетитель) ── */
+  const GROQ_URL='https://api.groq.com/openai/v1/chat/completions';
+  const MODEL='qwen/qwen3.8-27b';
+  const MAX_STEPS=6;
+  const groqKey=()=>($('key').value||'').trim();
+  async function groqChat(messages, max_tokens=700){
+    const r=await fetch(GROQ_URL,{method:'POST',
+      headers:{'Authorization':'Bearer '+groqKey(),'Content-Type':'application/json'},
+      body:JSON.stringify({model:MODEL,messages,max_tokens,temperature:0})});
+    if(!r.ok){ let t=''; try{t=(await r.json()).error?.message||'';}catch(e){} throw new Error('Groq '+r.status+(t?': '+t:'')); }
+    const d=await r.json();
+    return { content:(d.choices?.[0]?.message?.content||'').trim(), usage:d.usage||{} };
+  }
+
+  /* ── инструменты (без ключей) ── */
+  async function wikipedia_search(q){
+    q=(q||'').trim(); if(!q) return 'Пустой запрос.';
+    const base='https://ru.wikipedia.org/w/api.php', UA={};
+    try{
+      const s=await (await fetch(base+'?origin=*&format=json&action=query&list=search&srlimit=1&srsearch='+encodeURIComponent(q))).json();
+      const hits=s.query&&s.query.search||[]; if(!hits.length) return 'В Википедии ничего не найдено по «'+q+'».';
+      const title=hits[0].title;
+      const e=await (await fetch(base+'?origin=*&format=json&action=query&prop=extracts&exintro=1&explaintext=1&titles='+encodeURIComponent(title))).json();
+      const pages=e.query&&e.query.pages||{}; let x=(Object.values(pages)[0].extract||'').trim();
+      if(!x) return 'Статья «'+title+'» найдена, но без вводного текста.';
+      x=x.replace(/\s+/g,' '); if(x.length>900) x=x.slice(0,900).replace(/\s\S*$/,'')+'…';
+      return '[Википедия · '+title+'] '+x;
+    }catch(ex){ return 'Ошибка обращения к Википедии: '+ex; }
+  }
+  function calculator(q){
+    let expr=(q||'').replace(/\^/g,'**').replace(/×/g,'*').replace(/÷/g,'/').replace(/,/g,'.').trim();
+    if(!expr || !/^[0-9.+\-*/%() \t]+$/.test(expr)) return 'Не смог вычислить «'+q+'». Оставь только числа и + - * / ** % ( ).';
+    try{ const v=Function('"use strict";return ('+expr+')')();
+      if(v===Infinity||v===-Infinity) return 'Ошибка: деление на ноль.';
+      if(typeof v!=='number'||Number.isNaN(v)) return 'Не смог вычислить «'+q+'».';
+      return expr+' = '+(Number.isInteger(v)?v:+v.toFixed(6)); }
+    catch(e){ return 'Не смог вычислить «'+q+'».'; }
+  }
+  function current_time(){ const d=new Date();
+    const p=n=>String(n).padStart(2,'0');
+    const days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    return 'Сейчас '+d.getUTCFullYear()+'-'+p(d.getUTCMonth()+1)+'-'+p(d.getUTCDate())+' '+p(d.getUTCHours())+':'+p(d.getUTCMinutes())+' UTC ('+days[d.getUTCDay()]+')'; }
+  const TOOLS={
+    wikipedia_search:{fn:wikipedia_search, desc:'Найти факты о теме, человеке, месте или событии в Википедии. Вход: поисковый запрос.'},
+    calculator:{fn:calculator, desc:"Точно посчитать арифметическое выражение. Вход: выражение, напр. '2^10 / 8'."},
+    current_time:{fn:current_time, desc:'Узнать текущие дату и время (UTC). Вход: не нужен (пусто).'},
+  };
+  const toolsDesc=()=>Object.entries(TOOLS).map(([n,t])=>'- '+n+': '+t.desc).join('\n');
+
+  /* ── ReAct-цикл (порт agent.py на JS) ── */
+  const SYSTEM=()=>`Ты — рассуждающий агент. Ты решаешь задачу пошагово, используя инструменты.
+
+Доступные инструменты:
+${toolsDesc()}
+
+На КАЖДОМ шаге отвечай СТРОГО одним JSON-объектом, без markdown и текста вокруг:
+  {"thought": "<рассуждение на 1 фразу>", "action": "<имя инструмента>", "action_input": "<аргумент>"}
+Когда ответ готов — верни:
+  {"thought": "<итоговое рассуждение>", "action": "final", "action_input": "<финальный ответ пользователю>"}
+
+Правила:
+- Не выдумывай факты — для фактов вызывай wikipedia_search.
+- Для любых расчётов вызывай calculator, не считай в уме.
+- Используй результаты инструментов (observation) из истории, не повторяй один и тот же вызов.
+- Отвечай на языке вопроса. Только валидный JSON, ничего кроме него.`;
+
+  function parseStep(raw){
+    raw=(raw||'').trim();
+    if(raw.startsWith('```')) raw=raw.replace(/^```[a-z]*\n?/i,'').replace(/\n?```$/,'').trim();
+    try{ return JSON.parse(raw); }catch(e){}
+    const m=raw.match(/\{[\s\S]*\}/); if(m){ try{ return JSON.parse(m[0]); }catch(e){} }
+    return { action:'final', action_input: raw||'(пустой ответ модели)' };
+  }
+  async function runReAct(question){
+    const messages=[{role:'system',content:SYSTEM()},{role:'user',content:question.trim()}];
+    const steps=[]; const total={prompt_tokens:0,completion_tokens:0};
+    for(let i=0;i<MAX_STEPS;i++){
+      const {content,usage}=await groqChat(messages,700);
+      total.prompt_tokens+=usage.prompt_tokens||0; total.completion_tokens+=usage.completion_tokens||0;
+      const step=parseStep(content);
+      const action=((step.action||'final')+'').trim();
+      const thought=((step.thought||'')+'').trim();
+      const arg=step.action_input==null?'':String(step.action_input);
+      if(action==='final'){ steps.push({n:i+1,thought,action:'final',input:arg,observation:null});
+        return {answer:arg,steps,usage:total,stopped:false}; }
+      const observation = TOOLS[action] ? await TOOLS[action].fn(arg)
+        : ('Нет инструмента «'+action+'». Доступны: '+Object.keys(TOOLS).join(', ')+'.');
+      steps.push({n:i+1,thought,action,input:arg,observation});
+      messages.push({role:'assistant',content});
+      messages.push({role:'user',content:'Observation: '+observation+'\nПродолжай (JSON).'});
+    }
+    messages.push({role:'user',content:'Лимит шагов исчерпан. Дай финальный ответ JSON с action=final.'});
+    const {content,usage}=await groqChat(messages,500);
+    total.prompt_tokens+=usage.prompt_tokens||0; total.completion_tokens+=usage.completion_tokens||0;
+    const final=parseStep(content);
+    return {answer:String(final.action_input||'Не удалось прийти к ответу за отведённые шаги.'),steps,usage:total,stopped:true};
+  }
+
+  const TOOLMETA = {
+    wikipedia_search:{c:'var(--wiki)', ru:'Википедия', en:'Wikipedia'},
+    calculator:{c:'var(--calc)', ru:'Калькулятор', en:'Calculator'},
+    current_time:{c:'var(--time)', ru:'Время', en:'Time'},
+    final:{c:'var(--final)', ru:'Финал', en:'Final'},
+  };
+  const EXAMPLES=[
+    "Сколько лет назад родился Алан Тьюринг, если ориентироваться на текущий год?",
+    "В каком городе находится штаб-квартира Nintendo и сколько будет 1980 * 12?",
+    "Кто написал «Преступление и наказание» и в каком году он родился?",
+    "Посчитай 2^16 и объясни, что это за число в информатике.",
+  ];
+  const GOLDEN=[
+    {q:'Сколько будет 1980 * 12?', tool:'calculator', expect:['23760']},
+    {q:'Чему равно 2 в степени 10?', tool:'calculator', expect:['1024']},
+    {q:'Посчитай (144 + 56) / 8', tool:'calculator', expect:['25']},
+    {q:'Кто написал роман «Преступление и наказание»?', tool:'wikipedia_search', expect:['Достоевск']},
+    {q:'В каком городе находится штаб-квартира компании Nintendo?', tool:'wikipedia_search', expect:['Киото']},
+    {q:'Кто автор теории относительности?', tool:'wikipedia_search', expect:['Эйнштейн']},
+  ];
+
+  const I18N = {
+    ru:{ titleHTML:'AI‑агент, который <span class="grad">рассуждает</span>',
+      lede:"Задаёшь вопрос — агент сам решает, какие инструменты вызвать, выполняет их по шагам и показывает всю цепочку рассуждений. Живое демо: тот же ReAct-цикл в браузере, введите свой бесплатный ключ Groq.",
+      keyLabel:"Ключ Groq", keyHint:'Бесплатный ключ Groq (без карты) — <a href="https://console.groq.com" target="_blank" rel="noopener">console.groq.com</a>. Хранится только в вашем браузере.',
+      qLabel:"Вопрос", qPh:"Кто написал «Преступление и наказание» и в каком году он родился?", askBtn:"Запустить агента",
+      stepsEyebrow:"Reasoning trace", stepsTitle:"Ход рассуждения", stepsDesc:"Каждый шаг: мысль → инструмент → результат. Проявляется в реальном времени, как работает агент.",
+      ansCap:"Финальный ответ", obsCap:"результат инструмента",
+      aboutEyebrow:"Зачем это", aboutTitle:"Не выдумывает — проверяет",
+      a1t:"Точность", a1:"Обычная модель не умеет считать точно и не знает свежих фактов — она «галлюцинирует».",
+      a2t:"Инструменты", a2:"Агент рассуждает, вызывает нужный инструмент, читает результат и только потом отвечает.",
+      a3t:"Продакшн", a3:"Так строятся ассистенты, которые ищут в базе, считают, ходят в API — основа реальных агентов.",
+      evalEyebrow:"Evaluation", evalTitle:"Оценка качества", evalDesc:"Golden-набор из 6 задач: верный инструмент, верный ответ и продакшн-метрики (шаги, токены, latency).",
+      evalBtn:"Запустить эвал", evalRun:"гоняю набор…", footNote:"браузерное демо, исходник на Python",
+      mTool:"Верный инструмент", mAns:"Верный ответ", mSteps:"Шагов / задача", mTok:"Токенов / задача", mLat:"Latency / задача",
+      running:"агент рассуждает", needQ:"Введите вопрос.", needKey:"Введите бесплатный ключ Groq (console.groq.com).", stopWarn:"достигнут лимит шагов", steps:"шагов", tok:"токенов" },
+    en:{ titleHTML:'An AI agent that <span class="grad">reasons</span>',
+      lede:"Ask a question — the agent decides which tools to call, runs them step by step and shows the whole reasoning chain. Live demo: the same ReAct loop in the browser, enter your free Groq key.",
+      keyLabel:"Groq key", keyHint:'Free Groq key (no card) — <a href="https://console.groq.com" target="_blank" rel="noopener">console.groq.com</a>. Stored only in your browser.',
+      qLabel:"Question", qPh:"Who wrote «Crime and Punishment» and in what year was he born?", askBtn:"Run the agent",
+      stepsEyebrow:"Reasoning trace", stepsTitle:"Reasoning trace", stepsDesc:"Each step: thought → tool → observation. Revealed in real time, the way the agent works.",
+      ansCap:"Final answer", obsCap:"tool observation",
+      aboutEyebrow:"Why it matters", aboutTitle:"It verifies, doesn't invent",
+      a1t:"Accuracy", a1:"A plain model can't compute exactly and doesn't know fresh facts — it hallucinates.",
+      a2t:"Tools", a2:"The agent reasons, calls the right tool, reads the result, and only then answers.",
+      a3t:"Production", a3:"This is how assistants that search a base, compute, and hit APIs are built — the core of real agents.",
+      evalEyebrow:"Evaluation", evalTitle:"Quality evaluation", evalDesc:"Golden set of 6 tasks: correct tool, correct answer and production metrics (steps, tokens, latency).",
+      evalBtn:"Run eval", evalRun:"running…", footNote:"browser demo, source in Python",
+      mTool:"Correct tool", mAns:"Correct answer", mSteps:"Steps / task", mTok:"Tokens / task", mLat:"Latency / task",
+      running:"agent is reasoning", needQ:"Enter a question.", needKey:"Enter your free Groq key (console.groq.com).", stopWarn:"step limit reached", steps:"steps", tok:"tokens" }
+  };
+  let uiLang = localStorage.getItem('ui_lang') || 'ru';
+  let lastRun=null;
+
+  function applyLang(l){
+    uiLang=l; localStorage.setItem('ui_lang',l); const t=I18N[l];
+    document.documentElement.setAttribute('lang',l);
+    $('heroTitle').innerHTML = t.titleHTML;
+    document.querySelectorAll('[data-i18n]').forEach(e=>{const k=e.dataset.i18n; if(t[k]!=null) e.textContent=t[k];});
+    document.querySelectorAll('[data-i18n-html]').forEach(e=>{const k=e.dataset.i18nHtml; if(t[k]!=null) e.innerHTML=t[k];});
+    document.querySelectorAll('[data-i18n-ph]').forEach(e=>{const k=e.dataset.i18nPh; if(t[k]!=null) e.placeholder=t[k];});
+    $('seg').dataset.on = l;
+    $('ruBtn').setAttribute('aria-pressed', l==='ru'); $('enBtn').setAttribute('aria-pressed', l==='en');
+    renderMeta();
+    if(lastRun) renderResult(lastRun, false);
+  }
+  $('ruBtn').onclick=()=>applyLang('ru'); $('enBtn').onclick=()=>applyLang('en');
+
+  const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('shown');io.unobserve(e.target);}}),{threshold:.14});
+  const observeReveals=()=>document.querySelectorAll('[data-reveal]:not(.shown)').forEach(el=>io.observe(el));
+
+  let dockCenters=[];
+  function measureDock(){ dockCenters=[...$('dock').children].map(c=>{const r=c.getBoundingClientRect();return r.left+r.width/2;}); }
+  if(!RM){
+    const dock=$('dock');
+    dock.addEventListener('pointerenter', measureDock);
+    dock.addEventListener('pointermove', e=>{ const chips=dock.children;
+      for(let i=0;i<chips.length;i++){ const k=Math.max(0,1-Math.abs(e.clientX-dockCenters[i])/130);
+        chips[i].style.transform=`translateY(${(-10*k).toFixed(1)}px) scale(${(1+.32*k).toFixed(3)})`; } }, {passive:true});
+    dock.addEventListener('pointerleave', ()=>{ for(const c of dock.children) c.style.transform=''; });
+    window.addEventListener('resize', ()=>{ for(const c of $('dock').children) c.style.transform=''; }, {passive:true});
+  }
+  function renderMeta(){
+    $('dock').innerHTML = Object.keys(TOOLS).map(n=>{const m=TOOLMETA[n];
+      return `<span class="chip"><span class="d" style="background:${m.c}"></span><b>${m[uiLang]}</b></span>`;}).join('');
+    $('examples').innerHTML = EXAMPLES.map(e=>`<button class="ex">${esc(e)}</button>`).join('');
+    $('examples').querySelectorAll('.ex').forEach(b=> b.onclick=()=>{ $('q').value=b.textContent.trim(); $('q').focus(); });
+  }
+
+  function stepHTML(s){
+    const m=TOOLMETA[s.action]||{c:'var(--acc)',ru:s.action,en:s.action}; const isFinal=s.action==='final';
+    const io=isFinal?'':`<div class="io"><div class="in">${esc(s.input)}</div>
+      <div class="obs"><span class="cap">${I18N[uiLang].obsCap}</span>${esc(s.observation)}</div></div>`;
+    return `<div class="step ${isFinal?'final':''}"><span class="node"></span>
+      <div class="act"><span class="d" style="background:${m.c}"></span>${m[uiLang]}<span class="num">· ${s.n}</span></div>
+      ${s.thought?`<div class="th">${esc(s.thought)}</div>`:''}${io}</div>`;
+  }
+  function countUp(el,target,suffix=''){
+    if(RM){ el.textContent=target+suffix; return; }
+    const t0=performance.now(), dur=850, isF=String(target).includes('.');
+    (function tick(now){ const p=Math.min(1,(now-t0)/dur), e=1-Math.pow(1-p,3), v=target*e;
+      el.textContent=(isF?v.toFixed(1):Math.round(v))+suffix; if(p<1) requestAnimationFrame(tick); else el.textContent=target+suffix; })(t0);
+  }
+  async function streamWords(el,text){
+    const words=String(text).split(/(\s+)/);
+    el.innerHTML=words.map(w=>/^\s+$/.test(w)?w:`<w>${esc(w)}</w>`).join('');
+    const ws=el.querySelectorAll('w'); if(RM){ ws.forEach(w=>w.classList.add('on')); return; }
+    for(let i=0;i<ws.length;i++){ ws[i].classList.add('on'); if(i%2===0) await sleep(15); }
+  }
+  async function renderResult(r, animate){
+    if(!animate){
+      $('steps').innerHTML=r.steps.map(stepHTML).join('');
+      $('steps').querySelectorAll('.step').forEach(s=>s.classList.add('in'));
+      $('timeline').classList.add('draw'); $('answer').textContent=r.answer;
+      const u=r.usage||{},t=I18N[uiLang],tot=(u.prompt_tokens||0)+(u.completion_tokens||0);
+      $('meta').innerHTML=`<span><b>${r.steps.length}</b> ${t.steps}</span><span><b>${tot}</b> ${t.tok}</span>`+(r.stopped?`<span class="warn">⚠ ${t.stopWarn}</span>`:'');
+      $('result').style.display='block'; return;
+    }
+    $('result').style.display='block'; $('answer').innerHTML=''; $('meta').innerHTML='';
+    const tl=$('timeline'); tl.classList.remove('draw');
+    $('steps').innerHTML=r.steps.map(stepHTML).join('');
+    const els=[...$('steps').querySelectorAll('.step')], per=330;
+    tl.style.setProperty('--drawdur',(Math.max(1,els.length)*per/1000)+'s');
+    void tl.offsetWidth; tl.classList.add('draw');
+    $('result').scrollIntoView({behavior:RM?'auto':'smooth',block:'start'});
+    for(const el of els){ el.classList.add('in'); await sleep(per); }
+    const u=r.usage||{},t=I18N[uiLang],tot=(u.prompt_tokens||0)+(u.completion_tokens||0);
+    await streamWords($('answer'), r.answer);
+    $('meta').innerHTML=`<span><b>${r.steps.length}</b> ${t.steps}</span><span><b>${tot}</b> ${t.tok}</span>`+(r.stopped?`<span class="warn">⚠ ${t.stopWarn}</span>`:'');
+  }
+  async function runAgent(){
+    const t=I18N[uiLang]; err('');
+    if(!groqKey()){ err(t.needKey); $('key').focus(); return; }
+    const q=$('q').value.trim(); if(!q){ err(t.needQ); return; }
+    $('ask').disabled=true; $('status').innerHTML=`<span class="think"><i></i><i></i><i></i></span>${t.running}`;
+    try{ const r=await runReAct(q); lastRun=r; await renderResult(r,true); }
+    catch(e){ err(String(e.message||e)); }
+    finally{ $('ask').disabled=false; $('status').textContent=''; }
+  }
+  $('ask').onclick=runAgent;
+  $('q').addEventListener('keydown',e=>{ if((e.metaKey||e.ctrlKey)&&e.key==='Enter') runAgent(); });
+
+  $('key').value = localStorage.getItem('groq_key') || '';
+  $('key').addEventListener('change', ()=> localStorage.setItem('groq_key', groqKey()));
+
+  $('eval').onclick=async()=>{
+    const t=I18N[uiLang]; err('');
+    if(!groqKey()){ err(t.needKey); $('key').focus(); return; }
+    $('eval').disabled=true; $('eval').textContent=t.evalRun;
+    try{
+      const rows=[]; let toolOk=0, ansOk=0, stepsSum=0, tokSum=0, latSum=0;
+      for(const g of GOLDEN){
+        const t0=performance.now(); const r=await runReAct(g.q); const lat=(performance.now()-t0)/1000;
+        const used=new Set(r.steps.map(s=>s.action));
+        const th=used.has(g.tool); const ah=g.expect.some(x=>(r.answer||'').toLowerCase().includes(x.toLowerCase()));
+        toolOk+=th?1:0; ansOk+=ah?1:0; stepsSum+=r.steps.length;
+        tokSum+=(r.usage.prompt_tokens||0)+(r.usage.completion_tokens||0); latSum+=lat;
+        rows.push({q:g.q,tool:g.tool,tool_hit:th,answer_hit:ah,steps:r.steps.length,latency:+lat.toFixed(2)});
+      }
+      const n=GOLDEN.length;
+      const R={tool_accuracy:toolOk/n, answer_accuracy:ansOk/n, avg_steps:+(stepsSum/n).toFixed(2),
+        avg_tokens:Math.round(tokSum/n), avg_latency:+(latSum/n).toFixed(2), rows};
+      const col=v=>v>=.85?'var(--calc)':v>=.6?'var(--time)':'var(--bad)';
+      $('metrics').innerHTML=
+        `<div class="metric"><div class="v" style="color:${col(R.tool_accuracy)}" data-c="${Math.round(R.tool_accuracy*100)}" data-s="%">0%</div><div class="l">${t.mTool}</div></div>
+         <div class="metric"><div class="v" style="color:${col(R.answer_accuracy)}" data-c="${Math.round(R.answer_accuracy*100)}" data-s="%">0%</div><div class="l">${t.mAns}</div></div>
+         <div class="metric"><div class="v" data-c="${R.avg_steps}" data-s="">0</div><div class="l">${t.mSteps}</div></div>
+         <div class="metric"><div class="v" data-c="${R.avg_tokens}" data-s="">0</div><div class="l">${t.mTok}</div></div>
+         <div class="metric"><div class="v" data-c="${R.avg_latency}" data-s="s">0s</div><div class="l">${t.mLat}</div></div>`;
+      $('evalBox').style.display='block';
+      $('metrics').querySelectorAll('.v').forEach(el=>countUp(el,parseFloat(el.dataset.c),el.dataset.s));
+      $('evalRows').innerHTML=R.rows.map(x=>{const ok=x.tool_hit&&x.answer_hit;
+        return `<div class="qrow"><span class="mk" style="color:${ok?'var(--calc)':'var(--bad)'}">${ok?'✓':'✕'}</span>
+          <span class="q">${esc(x.q)}</span><span class="st">${esc(x.tool)} · ${x.steps} · ${x.latency}s</span></div>`;}).join('');
+      $('evalBox').scrollIntoView({behavior:RM?'auto':'smooth',block:'nearest'});
+    }catch(e){ err(String(e.message||e)); }
+    finally{ $('eval').disabled=false; $('eval').textContent=t.evalBtn; }
+  };
+
+  applyLang(uiLang); observeReveals();
+  requestAnimationFrame(()=>requestAnimationFrame(()=>document.body.classList.add('ready')));
+</script>
+</body>
+</html>
